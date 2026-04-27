@@ -1,0 +1,11 @@
+version: '3.3'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 1234567
+      POSTGRES_DB: qr_generator_db
+    ports:
+      - '5433:5432'
