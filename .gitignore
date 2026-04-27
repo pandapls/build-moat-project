@@ -23,3 +23,5 @@ build/
 
 # 缓存
 .cache/
+
+.claude

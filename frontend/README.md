@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QR Code Generator — 前端
 
-## Getting Started
+动态二维码管理系统的 React + Next.js 前端。
 
-First, run the development server:
+## 技术栈
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| 层级 | 技术 |
+|------|------|
+| 框架 | Next.js 16、React 19、TypeScript |
+| 样式 | Tailwind CSS v4 |
+| 数据请求 | TanStack Query v5 + Axios |
+| 表单 | TanStack Form + Zod |
+| 表格 | TanStack Table v8 |
+| UI 组件 | Base UI、shadcn |
+
+## 功能
+
+- 创建动态二维码，支持可选过期时间
+- 展示二维码图片 + 短链接，支持一键复制
+- 列表展示所有二维码，过期时间实时倒计时
+- 编辑目标 URL 和过期时间
+- 删除二维码（软删除）
+- 查看扫码统计（累计扫码次数）
+
+## 项目结构
+
+```
+src/
+├── app/
+│   ├── page.tsx               # 首页 — 模块入口
+│   ├── qr/
+│   │   ├── page.tsx           # 创建二维码
+│   │   └── list/page.tsx      # 二维码列表
+│   ├── layout.tsx
+│   └── providers.tsx
+├── components/
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   ├── CopyText.tsx       # 通用复制文本组件
+│   │   └── Modal.tsx          # 通用弹窗组件
+│   └── features/qr/
+│       ├── QrCreateForm.tsx   # URL + 过期时间表单
+│       ├── QrResult.tsx       # 创建成功结果卡片
+│       ├── QrListTable.tsx    # 分页表格（含倒计时）
+│       ├── QrEditModal.tsx    # 编辑 URL / 过期时间 / 删除
+│       └── QrAnalyticsModal.tsx
+├── hooks/
+│   ├── useQrCode.ts           # 创建 mutation
+│   └── useQrList.ts           # 分页列表 query
+├── services/
+│   └── qrService.ts           # 所有 API 调用
+├── lib/
+│   ├── apiClient.ts           # Axios 实例 + 响应解包
+│   ├── queryClient.ts         # TanStack Query 配置 + 缓存键
+│   ├── qrSchemas.ts           # Zod 校验 schema
+│   └── utils.ts               # cn()、getCountdown()
+└── types/
+    └── qr.ts                  # 公共 TypeScript 接口定义
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 快速开始
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**前置条件：** Node.js 18+，后端服务运行在 8000 端口
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm install
+pnpm dev       # http://localhost:3000
+```
 
-## Learn More
+环境变量（`.env.local`）：
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 后端接口
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+前端将所有 `/api/*` 和 `/r/*` 请求代理到 `NEXT_PUBLIC_API_URL`。
 
-## Deploy on Vercel
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/api/qr/create` | 创建二维码 |
+| `GET` | `/api/qr` | 获取二维码列表（分页） |
+| `GET` | `/api/qr/:token` | 获取单个二维码 |
+| `PATCH` | `/api/qr/:token` | 更新 URL / 过期时间 |
+| `DELETE` | `/api/qr/:token` | 软删除 |
+| `GET` | `/api/qr/:token/analytics` | 扫码统计 |
+| `GET` | `/api/qr/:token/images` | 二维码 PNG 图片 |
+| `GET` | `/r/:token` | 短链接跳转 |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+所有响应遵循统一信封格式 `{ success, code, data, message }`，由 `apiClient.ts` 自动解包。
